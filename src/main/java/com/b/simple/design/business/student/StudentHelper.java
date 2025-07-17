@@ -1,12 +1,35 @@
 package com.b.simple.design.business.student;
 public class StudentHelper {
 
-	/* PROBLEM 1 */	
+	private static final int LOWER_LIMIT_FOR_A_GRADE_B = 51;
+	private static final int UPPER_LIMIT_FOR_A_GRADE_B = 80;
+	private static final int EXTRA_MARKS_FOR_MATHS = 10;
+
+	private static final int LOWER_LIMIT_FOR_A_GRADE = 91;
+	private static final int LOWER_LIMIT_FOR_B_GRADE = 51;
+	private static final int EXTRA_MARKS_FOR_MATHS_GRADE = 5;
+
+	private static final int LOWER_LIMIT_FOR_QUALIFICATION = 20;
+	private static final int UPPER_LIMIT_FOR_QUALIFICATION = 80;
+	private static final int EXTRA_MARKS_FOR_MATHS_QUALIFICATION = 5;
+
+	public enum Grade {
+		A, B, C;
+	}
+
+	public enum Qualification {
+		YES, NO, MAYBE;
+	}
+
+	/* PROBLEM 1 */
 	/*
 	* You get a grade B if marks are between 51 and 80 (both inclusive). Except for Maths where the upper limit is increased by 10.
 	*/
 	public boolean isGradeB(int marks, boolean isMaths) {
-		return isMaths ? marks>=51 && marks<=90 : marks>=51 && marks<=80; 
+		int extraLimit = isMaths ? EXTRA_MARKS_FOR_MATHS : 0;
+		int upperLimit = UPPER_LIMIT_FOR_A_GRADE_B + extraLimit;
+
+		return marks >= LOWER_LIMIT_FOR_A_GRADE_B && marks <= upperLimit;
 	}
 
 	/* PROBLEM 2 */
@@ -16,51 +39,54 @@ public class StudentHelper {
 	Except for Maths where marks to get a Grade are 5 higher than required for other subjects.
 	*/
 
-	public String getGrade(int mark, boolean isMaths) {
-		String grade = "C";
-		
-		if (isGradeA(mark, isMaths))
-			grade = "A";
-		else if (isBGrade(mark, isMaths)) {
-			grade = "B";
-		}
-		return grade;
-	}
+	public Grade getGrade(int mark, boolean isMaths) {
+		int extraLimit = isMaths ? EXTRA_MARKS_FOR_MATHS_GRADE : 0;
 
-	private boolean isGradeA(int mark, boolean isMaths) {
-		int lowerLimitForAGrade = isMaths ? 95
-				: 90;
-		return mark > lowerLimitForAGrade;
-	}
+		if (mark >= LOWER_LIMIT_FOR_A_GRADE + extraLimit)
+			return Grade.A;
 
-	private boolean isBGrade(int mark, boolean isMaths) {
-		int lowerLimitGradeB = isMaths ? 55
-				: 50;
-		return mark > lowerLimitGradeB && mark < 90;
+		if (mark >= LOWER_LIMIT_FOR_B_GRADE + extraLimit)
+			return Grade.B;
+
+		return Grade.C;
 	}
 
     /*  PROBLEM 3
      * You and your Friend are planning to enter a Subject Quiz.
      * However, there is a marks requirement that you should attain to qualify.
-     * 
+     *
      * Return value can be YES, NO or MAYBE.
-     * 
+     *
      * YES If either of you are very good at the subject(has 80 or more marks)
      * However, there is an exception that if either of you is not good in the subject(20 or less marks), it is NO.
      * In all other conditions, return MAYBE.
-     * 
+     *
      * However, the definition for good and not good are 5 marks higher if the subject is Mathematics.
-     * 
+     *
      * marks1 - your marks
      * marks2 - your friends marks
     */
-        
-    public String willQualifyForQuiz(int marks1, int marks2, boolean isMaths) {
-        if ((isMaths ? marks1 <= 25 : marks1 <= 20)
-                || (isMaths ? marks2 <= 25 : marks2 <= 20)) return "NO";
-        if ((isMaths ? marks1 >= 85 : marks1 >= 80)
-                || (isMaths ? marks2 >= 85 : marks2 >= 80)) return "YES";
-        return "MAYBE";
-    }	
+
+    public Qualification willQualifyForQuiz(int marks1, int marks2, boolean isMaths) {
+		int extraLimit = isMaths ? EXTRA_MARKS_FOR_MATHS_QUALIFICATION : 0;
+		int lowerLimit = LOWER_LIMIT_FOR_QUALIFICATION + extraLimit;
+		int upperLimit = UPPER_LIMIT_FOR_QUALIFICATION + extraLimit;
+
+		if (isNotGood(marks1, lowerLimit) || isNotGood(marks2, lowerLimit))
+			return Qualification.NO;
+
+		if (isGood(marks1, upperLimit) || isGood(marks2, upperLimit))
+			return Qualification.YES;
+
+		return Qualification.MAYBE;
+    }
+
+	private boolean isNotGood(int marks, int lowerLimit) {
+		return marks <= lowerLimit;
+	}
+
+	private boolean isGood(int marks, int upperLimit) {
+		return marks >= upperLimit;
+	}
 
 }
