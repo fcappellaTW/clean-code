@@ -1,11 +1,14 @@
 package com.b.simple.design.business.customer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
@@ -21,62 +24,56 @@ public class CustomerBOTest {
 
 	private CustomerBO customerBO = new CustomerBOImpl();
 
+	private static final String PRODUCT_15_PRICE = "5.0";
+	private static final String PRODUCT_20_PRICE = "6.0";
+	private static final String FINAL_VALUE = "11.0";
+	private static final Currency DEFAULT_CURRENCY = Currency.EURO;
+	private static final Currency DIFFERENT_CURRENCY = Currency.INDIAN_RUPEE;
+
 	@Test
-	public void testCustomerProductSum_TwoProductsSameCurrencies()
+	public void customerProductSum_TwoProductsWithSameCurrency()
 			throws DifferentCurrenciesException {
 
-		List<Product> products = new ArrayList<Product>();
+		Amount[] amounts = {
+			new AmountImpl(new BigDecimal(PRODUCT_15_PRICE), DEFAULT_CURRENCY),
+			new AmountImpl(new BigDecimal(PRODUCT_20_PRICE), DEFAULT_CURRENCY)
+		};
 
-		products.add(
-				new ProductImpl(100, "Product 15", ProductType.BANK_GUARANTEE,
-						new AmountImpl(new BigDecimal("5.0"), Currency.EURO)));
+		List<Product> products = createProductsBasedOnAmounts(amounts);
 
-		products.add(
-				new ProductImpl(120, "Product 20", ProductType.BANK_GUARANTEE,
-						new AmountImpl(new BigDecimal("6.0"), Currency.EURO)));
+		Amount expectedAmount = new AmountImpl(new BigDecimal(FINAL_VALUE), DEFAULT_CURRENCY);
 
-		Amount temp = customerBO.getCustomerProductsSum(products);
-
-		assertEquals(Currency.EURO, temp.getCurrency());
-		assertEquals(new BigDecimal("11.0"), temp.getValue());
+		assertAmount(customerBO.getCustomerProductsSum(products), expectedAmount);
 	}
 
 	@Test
-	public void testCustomerProductSum1() {
+	public void customerProductSum_TwoProductsWithDifferentCurrencies() {
 
-		List<Product> products = new ArrayList<Product>();
+		Amount[] amounts = {
+			new AmountImpl(new BigDecimal(PRODUCT_15_PRICE), DEFAULT_CURRENCY),
+			new AmountImpl(new BigDecimal(PRODUCT_20_PRICE), DIFFERENT_CURRENCY)
+		};
 
-		products.add(new ProductImpl(100, "Product 15",
-				ProductType.BANK_GUARANTEE,
-				new AmountImpl(new BigDecimal("5.0"), Currency.INDIAN_RUPEE)));
+		List<Product> products = createProductsBasedOnAmounts(amounts);
 
-		products.add(
-				new ProductImpl(120, "Product 20", ProductType.BANK_GUARANTEE,
-						new AmountImpl(new BigDecimal("6.0"), Currency.EURO)));
-
-		@SuppressWarnings("unused")
-		Amount temp = null;
-
-		try {
-			temp = customerBO.getCustomerProductsSum(products);
-			fail("DifferentCurrenciesException is expected");
-		} catch (DifferentCurrenciesException e) {
-		}
+		assertThrows(DifferentCurrenciesException.class, () -> customerBO.getCustomerProductsSum(products));
 	}
 
 	@Test
-	public void testCustomerProductSum2() {
+	public void customerProductSum_NoProducts() throws DifferentCurrenciesException {
+		Amount actualAmount = customerBO.getCustomerProductsSum(new ArrayList<Product>());
+		Amount expectedAmount = new AmountImpl(BigDecimal.ZERO, DEFAULT_CURRENCY);
 
-		List<Product> products = new ArrayList<Product>();
+		assertAmount(actualAmount, expectedAmount);
+	}
 
-		Amount temp = null;
+	private List<Product> createProductsBasedOnAmounts(Amount[] amounts) {
+		return Arrays.stream(amounts).map(amount -> new ProductImpl(100, "Product", ProductType.BANK_GUARANTEE, amount)).collect(Collectors.toList());
+	}
 
-		try {
-			temp = customerBO.getCustomerProductsSum(products);
-		} catch (DifferentCurrenciesException e) {
-		}
-		assertEquals(Currency.EURO, temp.getCurrency());
-		assertEquals(BigDecimal.ZERO, temp.getValue());
+	private void assertAmount(Amount actualAmount, Amount expectedAmount) {
+		assertEquals(expectedAmount.getCurrency(), actualAmount.getCurrency());
+		assertEquals(expectedAmount.getValue(), actualAmount.getValue());
 	}
 
 }
