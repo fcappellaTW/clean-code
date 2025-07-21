@@ -10,7 +10,7 @@ public class UserLoginCheckerRefactored {
 	/**
 	 * {@inheritDoc}.
 	 */
-	public Lock isUserAllowedToLogin(long id, String status, 
+	public Lock isUserAllowedToLogin(long id, String status,
 			boolean isFirstScreen, User userTryingToLogin,
 			List existingLocks) {
 
@@ -34,23 +34,17 @@ public class UserLoginCheckerRefactored {
 		if (isFirstScreen && timeElapsedSinceLock > MAXIMUM_LOCK_PERIOD_IN_MS) {
 				return createWriteLock();
 		}
-		
+
 		return createReadLockWithMessage(userIdWithLock);
 
 	}
 
 	private Lock createReadLockWithMessage(String userIdWithLock) {
 		String lockMsg = Constants.LOCK_TEXT.replaceAll("@@USER@@", userIdWithLock);
-		Lock lock = new Lock();
-		lock.setRead(true);
-		// Only read access is permitted to other user
-		lock.setLockReason(lockMsg);
-		return lock;
+		return new Lock(true, lockMsg);
 	}
 
 	private Lock createWriteLock() {
-		Lock lock = new Lock();
-		lock.setRead(false);
-		return lock;
+		return new Lock(false, null);
 	}
 }

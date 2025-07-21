@@ -66,7 +66,7 @@ public class UserLoginCheckerTest {
 
     private Lock createLock(Object[] access, String userId, boolean isFirstScreen) {
         return userLoginChecker.isUserAllowedToLogin(10, "NOT_USED", isFirstScreen,
-            new User(userId), Arrays.asList(new Object[][] { access }));
+            new User(userId), Arrays.asList(new Object[] { access }));
     }
 
     private void assertLock(Lock lock, boolean isReadAccess, String lockReason) {

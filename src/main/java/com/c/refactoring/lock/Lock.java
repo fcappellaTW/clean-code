@@ -5,6 +5,11 @@ public class Lock {
     String lockReason;
     boolean readAccess;
 
+    public Lock(boolean readAccess, String lockReason) {
+        this.readAccess = readAccess;
+        this.lockReason = lockReason;
+    }
+
     public String getLockReason() {
         return lockReason;
     }
