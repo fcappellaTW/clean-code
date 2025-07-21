@@ -14,30 +14,34 @@ public class CustomerBOImpl implements CustomerBO {
 	@Override
 	public Amount getCustomerProductsSum(List<Product> products)
 			throws DifferentCurrenciesException {
-		BigDecimal temp = BigDecimal.ZERO;
-
 		if (products.size() == 0)
-			return new AmountImpl(temp, Currency.EURO);
+			return new AmountImpl(BigDecimal.ZERO, Currency.EURO);
 
-		// Throw Exception If Any of the product has a currency different from
-		// the first product
-		Currency firstProductCurrency = products.get(0).getAmount()
-				.getCurrency();
+		validateAllProductsHaveSameCurrency(products);
 
-		for (Product product : products) {
-			boolean currencySameAsFirstProduct = product.getAmount()
-					.getCurrency().equals(firstProductCurrency);
-			if (!currencySameAsFirstProduct) {
-				throw new DifferentCurrenciesException();
-			}
+		return sumAllProductsValue(products);
+	}
+
+	private void validateAllProductsHaveSameCurrency(List<Product> products)
+			throws DifferentCurrenciesException {
+
+		Currency firstProductCurrency = products.get(0).getAmount().getCurrency();
+
+		boolean allProductsHaveSameCurrency = products.stream()
+				.allMatch(product -> product.getAmount().getCurrency().equals(firstProductCurrency));
+
+		if (!allProductsHaveSameCurrency) {
+			throw new DifferentCurrenciesException();
 		}
+	}
 
-		// Calculate Sum of Products
-		for (Product product : products) {
-			temp = temp.add(product.getAmount().getValue());
-		}
-		
-		// Create new product
-		return new AmountImpl(temp, firstProductCurrency);
+	private Amount sumAllProductsValue(List<Product> products) {
+
+		Currency defaultCurrency = products.get(0).getAmount().getCurrency();
+
+		BigDecimal totalValue = products.stream()
+				.map(Product::getAmount).map(Amount::getValue).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+		return new AmountImpl(totalValue, defaultCurrency);
 	}
 }
